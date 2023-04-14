@@ -3,6 +3,7 @@ from data_aug.gaussian_blur import GaussianBlur
 from torchvision import transforms, datasets
 from data_aug.view_generator import ContrastiveLearningViewGenerator
 from exceptions.exceptions import InvalidDatasetSelection
+from data_aug.square_pad import SquarePad
 
 
 class ContrastiveLearningDataset:
@@ -14,6 +15,19 @@ class ContrastiveLearningDataset:
         """Return a set of data augmentation transformations as described in the SimCLR paper."""
         color_jitter = transforms.ColorJitter(0.8 * s, 0.8 * s, 0.8 * s, 0.2 * s)
         data_transforms = transforms.Compose([transforms.RandomResizedCrop(size=size),
+                                              transforms.RandomHorizontalFlip(),
+                                              transforms.RandomApply([color_jitter], p=0.8),
+                                              transforms.RandomGrayscale(p=0.2),
+                                              GaussianBlur(kernel_size=int(0.1 * size)),
+                                              transforms.ToTensor()])
+        return data_transforms
+    
+    @staticmethod
+    def get_simclr_pipeline_transform_with_squaring_first(size, s=1):
+        """Return a set of data augmentation transformations as described in the SimCLR paper."""
+        color_jitter = transforms.ColorJitter(0.8 * s, 0.8 * s, 0.8 * s, 0.2 * s)
+        data_transforms = transforms.Compose([SquarePad(padding_mode="edge"),
+                                              transforms.RandomResizedCrop(size=size),
                                               transforms.RandomHorizontalFlip(),
                                               transforms.RandomApply([color_jitter], p=0.8),
                                               transforms.RandomGrayscale(p=0.2),
@@ -34,9 +48,9 @@ class ContrastiveLearningDataset:
                                                               n_views),
                                                           download=True),
 
-                          'zois': lambda: datasets.ImageFolder(self.root_folder + "/zois" ,
+                          'zois': lambda: datasets.ImageFolder(self.root_folder + "/zois/unlabeled" ,
                                                           transform=ContrastiveLearningViewGenerator(
-                                                              self.get_simclr_pipeline_transform(96),
+                                                              self.get_simclr_pipeline_transform_with_squaring_first(96),
                                                               n_views))
                                                           }
 
