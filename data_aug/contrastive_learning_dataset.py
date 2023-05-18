@@ -7,8 +7,9 @@ from data_aug.square_pad import SquarePad
 
 
 class ContrastiveLearningDataset:
-    def __init__(self, root_folder):
+    def __init__(self, root_folder, split_path=None):
         self.root_folder = root_folder
+        self.split_path = split_path
 
     @staticmethod
     def get_simclr_pipeline_transform(size, s=1):
@@ -48,7 +49,7 @@ class ContrastiveLearningDataset:
                                                               n_views),
                                                           download=True),
 
-                          'zois': lambda: datasets.ImageFolder(self.root_folder + "/zois/unlabeled" ,
+                          'zois': lambda: datasets.ImageFolder(self.root_folder + "/zois/" + ("unlabeled" if self.split_path is None else self.split_path),
                                                           transform=ContrastiveLearningViewGenerator(
                                                               self.get_simclr_pipeline_transform_with_squaring_first(96),
                                                               n_views))

@@ -62,6 +62,7 @@ class SimCLR(object):
         save_config_file(self.writer.log_dir, self.args)
 
         n_iter = 0
+        best_top1 = 0.
         logging.info(f"Start SimCLR training for {self.args.epochs} epochs.")
         logging.info(f"Training with gpu: {self.args.disable_cuda}.")
 
@@ -97,6 +98,18 @@ class SimCLR(object):
                 self.scheduler.step()
             logging.debug(f"Epoch: {epoch_counter}\tLoss: {loss}\tTop1 accuracy: {top1[0]}")
 
+            # save checkpoint
+            if epoch_counter % self.args.checkpoint_every == 0:
+                save_checkpoint({
+                    'epoch': epoch_counter + 1,
+                    'arch': self.args.arch,
+                    'state_dict': self.model.state_dict(),
+                    'optimizer': self.optimizer.state_dict(),
+                    'top1': top1[0],
+                }, is_best=top1[0] >= best_top1, filename=os.path.join(self.writer.log_dir, 'checkpoint_{:04d}.pth.tar'.format(epoch_counter)))
+                logging.info(f"Model checkpoint and metadata created.")
+            best_top1 = max(best_top1, top1[0])
+
         logging.info("Training has finished.")
         # save model checkpoints
         checkpoint_name = 'checkpoint_{:04d}.pth.tar'.format(self.args.epochs)
@@ -105,5 +118,6 @@ class SimCLR(object):
             'arch': self.args.arch,
             'state_dict': self.model.state_dict(),
             'optimizer': self.optimizer.state_dict(),
+            'top1': top1[0],
         }, is_best=False, filename=os.path.join(self.writer.log_dir, checkpoint_name))
         logging.info(f"Model checkpoint and metadata has been saved at {self.writer.log_dir}.")
