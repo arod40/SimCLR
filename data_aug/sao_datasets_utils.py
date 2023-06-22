@@ -4,6 +4,7 @@ import torch
 from torch.utils.data import Dataset
 from random import seed, sample
 
+
 class AlignedImageFeaturesDataset(Dataset):
     def __init__(self, image_folder_dataset, features_dataset):
         self.image_folder_dataset = image_folder_dataset
@@ -21,7 +22,6 @@ class AlignedImageFeaturesDataset(Dataset):
             "features": self.features_dataset[img_path]["features"],
             "label": self.image_folder_dataset[i][1],
         }
-    
 
 
 class ZOISDatasetFeatures(Dataset):
@@ -123,4 +123,3 @@ class ZOISDatasetFeatures(Dataset):
         text_data = self.normalize1D(text_data)
 
         return labels, label2indx, text_data, labels_data, path2index
-
